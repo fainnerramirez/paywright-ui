@@ -3,7 +3,7 @@ import { addEdge, applyEdgeChanges, applyNodeChanges, ReactFlow } from '@xyflow/
 import '@xyflow/react/dist/style.css';
 import { useCallback, useState } from 'react';
 import { api } from './axios/config';
-import type { TEdge, TNode, TPages } from './types/types';
+import type { ResponseAPI, TEdge, TNode, TPages } from './types/types';
 
 const initialNodes: TNode[] = [];
 const initialEdges: TEdge[] = [];
@@ -20,7 +20,7 @@ const dataPages: TPages = {
 
 export default function App() {
   const [statusAPI, setStatusAPI] = useState(false);
-  const [pages, setPages] = useState(dataPages);
+  const [pages,] = useState(dataPages);
   const [selectedPage, setSelectedPage] = useState<keyof TPages>('home');
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
@@ -65,13 +65,35 @@ export default function App() {
     console.log("Current nodes: ", nodes);
   }, [selectedPage, pages]);
 
+  type Step = {
+    id: number;
+    accion: string;
+    selector?: string;
+    valor?: string;
+    tipo?: string;
+  }
   const executeFlow = async () => {
     try {
-      const response = await api.get('/home');
-      if (response.status !== 200) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const objPost = {
+        nameFlow: "Playwright Flow",
+        steps: nodes.map((node) => {
+          const step: Step = {
+            id: parseInt(node.id),
+            accion: node.data.label.replace('go ', ''),
+          };
+          return step;
+        }),
       }
-      const data = response.data;
+
+      const response = await api.post('/execute', objPost);
+      const data: ResponseAPI = response.data;
+      toast({
+        title: data.message,
+        status: response.status === 200 ? 'success' : 'error',
+        duration: 5000,
+        isClosable: true
+      })
       console.log("Flow data: ", data);
     } catch (error) {
       console.error("Error executing flow: ", error);
@@ -82,17 +104,14 @@ export default function App() {
     try {
 
       const response = await api.get('/status');
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      const data: ResponseAPI = response.data;
+      console.log("API response: ", data);
       toast({
-        title: 'API funciona correctamente.',
-        description: "puedes continuar con el flujo.",
-        status: 'success',
+        title: data.message,
+        description: response.status === 200 ? "puedes continuar con el flujo." : 'Ocurrí un error al validar la API.',
+        status: response.status === 200 ? 'success' : 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: true
       });
       setStatusAPI(true);
     } catch (error) {

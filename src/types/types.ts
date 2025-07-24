@@ -23,5 +23,10 @@ type TPages = {
   payment: TDataPage;
 };
 
-export type { TDataPage, TEdge, TNode, TPages };
+type ResponseAPI = {
+  message: string;
+  details?: string
+};
+
+export type { ResponseAPI, TDataPage, TEdge, TNode, TPages };
 

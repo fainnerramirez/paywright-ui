@@ -2,6 +2,7 @@ import { Box, Button, ButtonGroup, Heading, HStack, Select, useToast } from '@ch
 import { addEdge, applyEdgeChanges, applyNodeChanges, ReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useCallback, useState } from 'react';
+import { api } from './axios/config';
 import type { TEdge, TNode, TPages } from './types/types';
 
 const initialNodes: TNode[] = [];
@@ -66,11 +67,11 @@ export default function App() {
 
   const executeFlow = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/home');
-      if (!response.ok) {
+      const response = await api.get('/home');
+      if (response.status !== 200) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      const data = response.data;
       console.log("Flow data: ", data);
     } catch (error) {
       console.error("Error executing flow: ", error);
@@ -79,9 +80,10 @@ export default function App() {
 
   const validateAPI = async () => {
     try {
-      const response = await fetch('http://localhost:3000/');
 
-      if (!response.ok) {
+      const response = await api.get('/status');
+
+      if (response.status !== 200) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
